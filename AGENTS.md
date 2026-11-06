@@ -6,16 +6,16 @@ GitHub shows `README.md` from this repo on the profile page at github.com/hxssee
 
 There is no install, dev server, typecheck, lint, format or build: the repo is one Markdown file that GitHub renders. Tests: not applicable.
 
-- Check for em dashes, as CI does: `git grep -nP '\x{2014}'` (prints nothing when clean). It searches tracked files only, so `git add` a new file first; macOS `grep` has no `-P`.
+- Check the files for em dashes: `git grep --untracked -I -n -F "$(printf '\xe2\x80\x94')"` (prints nothing and exits 1 when clean; any other exit is an error, not a pass). It works in any locale and finds untracked files.
+- Run the house rules check as CI does, against your branch: `python3 .github/scripts/house_rules.py origin/main HEAD` (prints `House rules: ok`).
 - Preview the README as GitHub will render it: `gh api markdown -f mode=gfm -f context=hxsseeb/hxsseeb -F text=@README.md` (prints the HTML).
-- Check the Claude settings file parses: `python3 -m json.tool .claude/settings.json > /dev/null` (silent when it parses).
 
 ## Conventions
 
 - `README.md` is the page. Edit it directly; it is also the exemplar for any change to the profile.
 - Keep its order: name heading, one-line summary, a paragraph on the current role, a paragraph on the owner's own products, the "Working with" line, the links line, then the streak card.
 - Inline lists use a middle dot with a space either side (`TypeScript · React`), not commas or pipes.
-- Write in the owner's voice: short, plain, no superlatives. British English (organise, colour, licence as the noun).
+- Write in the owner's voice: short, plain, no superlatives.
 - Links go to public pages only: the owner's LinkedIn, shack.solutions and its products, plus the workplace link in the role paragraph, which is the owner's (see Gotchas).
 
 ## UI and design system
@@ -35,24 +35,22 @@ Ask first:
 
 - Changing what the README says about the owner (role, products, skills, links), because it is their public voice. Fixing a typo or an American spelling is fine.
 - Adding an image, badge or other third-party service, because each one makes every visitor's browser call that service.
-- Adding files beyond `README.md`, `AGENTS.md`, `.claude/settings.json`, `.gitignore` and `.github/workflows/ci.yml`, because the repo itself is public too.
 
 Never:
 
-- Put personal details (address, phone number, personal email, family, health, money) or anything about the employer in any file, commit message or PR, because the repo is public and a commit stays in history after the line is removed. Personal notes belong in `hxsseeb/hearth`.
+- Put personal details (address, phone number, personal email, family, health, money) or anything about the employer in any file, commit message or PR, because the repo is public and a commit stays in history after the line is removed.
 - Push to `main`, because a push there changes the public profile at once.
 
 ## Git and PRs
 
 - Branch from `main` as `docs/<slug>` and use `docs:` Conventional Commit titles; the repo has no code, so nearly every change is `docs`.
 - What merging deploys: no deploy workflow exists. GitHub re-renders the profile from `README.md` on `main` within moments of the merge.
-- `.github/workflows/ci.yml` runs the em dash check on every PR and every push to `main`. It is the only check.
+- `.github/workflows/rules.yml` runs on every PR (including edits to its body) and every push to `main`. It fails on an em dash in any file at the head commit, on AI attribution in a commit message, commit author or the PR body, and on a secret that gitleaks finds in the new commits. A red run flags the PR; `main` is not protected, so it does not block a merge.
 
 ## Where to look
 
 - `README.md`: the profile itself, and the only content file.
-- `.github/workflows/ci.yml`: the em dash check, if CI fails.
-- `standard/writing.md` in `shacksolutions/brain`: the British English and em dash rules, when in doubt about wording.
+- `.github/workflows/rules.yml` and `.github/scripts/house_rules.py`: the house rules check, when it fails. Both are copies of Hearth's; change them there.
 - docs.github.com, "Managing your profile README": what GitHub renders and when, before any structural change.
 
 <!-- hearth:shared:start -->
